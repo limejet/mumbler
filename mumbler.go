@@ -15,6 +15,7 @@ type Mumbler struct {
 	playlist []string
 	config   *gumble.Config
 	client   *gumble.Client
+	command  string
 }
 
 func New() *Mumbler {
@@ -65,6 +66,10 @@ func (m *Mumbler) ClearFiles() {
 	m.playlist = []string{}
 }
 
+func (m *Mumbler) Command(c string) {
+	m.command = c
+}
+
 func (m *Mumbler) Certificate(file, keyfile string) error {
 	m.config.TLSConfig.InsecureSkipVerify = false
 
@@ -85,6 +90,9 @@ func (m *Mumbler) Play() error {
 		source := gumbleffmpeg.SourceFile(file)
 		stream := gumbleffmpeg.New(m.client, source)
 
+		if m.command != "" {
+			stream.Command = m.command
+		}
 		if err := stream.Play(); err != nil {
 			return err
 		}
