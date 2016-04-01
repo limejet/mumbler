@@ -96,6 +96,7 @@ func (m *Mumbler) Play() error {
 		if err := stream.Play(); err != nil {
 			return err
 		}
+		stream.Wait()
 	}
 	return nil
 }
