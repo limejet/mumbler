@@ -33,7 +33,7 @@ func (m *Mumbler) Password(n string) {
 	m.config.Password = n
 }
 
-func (m *Mumbler) MoveToChannel(name string, create bool) err {
+func (m *Mumbler) MoveToChannel(name string, create bool) error {
 	target := m.client.Channels.Find(name)
 
 	if target == nil {
@@ -47,12 +47,12 @@ func (m *Mumbler) MoveToChannel(name string, create bool) err {
 
 		root.Add(name, true)
 
-		target := client.Channels.Find(name)
+		target := m.client.Channels.Find(name)
 		if target == nil {
 			return errors.New("Failed to create channel " + name)
 		}
 	}
-	client.Self.Move(target)
+	m.client.Self.Move(target)
 	return nil
 
 }
@@ -68,7 +68,7 @@ func (m *Mumbler) ClearFiles() {
 func (m *Mumbler) Certificate(file, keyfile string) error {
 	m.config.TLSConfig.InsecureSkipVerify = false
 
-	if keyfile == nil || keyfile == "" {
+	if keyfile == "" {
 		keyfile = file
 	}
 	cert, err := tls.LoadX509KeyPair(file, keyfile)
@@ -80,12 +80,12 @@ func (m *Mumbler) Certificate(file, keyfile string) error {
 	return nil
 }
 
-func (m *Mumbler) Play() err {
+func (m *Mumbler) Play() error {
 	for _, file := range m.playlist {
 		source := gumbleffmpeg.SourceFile(file)
-		m.stream = gumbleffmpeg.New(client, source)
+		stream := gumbleffmpeg.New(client, source)
 
-		if err := m.stream.Play(); err != nil {
+		if err := stream.Play(); err != nil {
 			return err
 		}
 	}
@@ -101,9 +101,7 @@ func (m *Mumbler) Server(address string) {
 	m.config.Address = net.JoinHostPort(host, port)
 }
 
-func (m *Mumbler) Connect() err {
-
-	loadCert(m.config)
+func (m *Mumbler) Connect() error {
 
 	m.client = gumble.NewClient(m.config)
 
@@ -118,6 +116,6 @@ func (m *Mumbler) Connect() err {
 	return nil
 }
 
-func (m *Mumbler) Disconnect() err {
+func (m *Mumbler) Disconnect() error {
 	return m.client.Disconnect()
 }
