@@ -83,12 +83,13 @@ func (m *Mumbler) Certificate(file, keyfile string) error {
 func (m *Mumbler) Play() error {
 	for _, file := range m.playlist {
 		source := gumbleffmpeg.SourceFile(file)
-		stream := gumbleffmpeg.New(client, source)
+		stream := gumbleffmpeg.New(m.client, source)
 
 		if err := stream.Play(); err != nil {
 			return err
 		}
 	}
+	return nil
 }
 
 func (m *Mumbler) Server(address string) {
