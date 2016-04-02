@@ -17,7 +17,7 @@ type Mumbler struct {
 	config   *gumble.Config
 	client   *gumble.Client
 	command  string
-	loop bool
+	loop     bool
 }
 
 func New() *Mumbler {
@@ -102,21 +102,21 @@ func (m *Mumbler) SetTLSInsecureSkipVerify(b bool) {
 
 func (m *Mumbler) Play() error {
 	for {
-	for _, playlistItem := range m.playlist {
-		source := playlistItem.GetSource()
-		stream := gumbleffmpeg.New(m.client, source)
+		for _, playlistItem := range m.playlist {
+			source := playlistItem.GetSource()
+			stream := gumbleffmpeg.New(m.client, source)
 
-		if m.command != "" {
-			stream.Command = m.command
+			if m.command != "" {
+				stream.Command = m.command
+			}
+			if err := stream.Play(); err != nil {
+				return err
+			}
+			stream.Wait()
 		}
-		if err := stream.Play(); err != nil {
-			return err
+		if !m.loop {
+			break
 		}
-		stream.Wait()
-	}
-	if !m.loop {
-		break
-	}
 	}
 	return nil
 }
