@@ -3,10 +3,10 @@ package mumbler
 import (
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/layeh/gumble/gumble"
 	"github.com/layeh/gumble/gumbleffmpeg"
@@ -170,11 +170,6 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 		return
 	}
 	m.stream.Volume = m.volume * 0.15
-	fmt.Println("AudioStreamEvent loop!")
-	i := 0
-	for _ = range e.C {
-		fmt.Printf("%d\n", i)
-	}
-	fmt.Println("Done!")
+	time.Sleep(1 * time.Second)
 	m.stream.Volume = m.volume
 }
