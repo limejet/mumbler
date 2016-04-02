@@ -20,7 +20,6 @@ type Mumbler struct {
 
 func New() *Mumbler {
 	config := gumble.NewConfig()
-	config.TLSConfig.InsecureSkipVerify = true
 	return &Mumbler{
 		config: config,
 	}
@@ -71,8 +70,6 @@ func (m *Mumbler) Command(c string) {
 }
 
 func (m *Mumbler) Certificate(file, keyfile string) error {
-	m.config.TLSConfig.InsecureSkipVerify = false
-
 	if keyfile == "" {
 		keyfile = file
 	}
@@ -83,6 +80,10 @@ func (m *Mumbler) Certificate(file, keyfile string) error {
 
 	m.config.TLSConfig.Certificates = append(m.config.TLSConfig.Certificates, cert)
 	return nil
+}
+
+func (m *Mumbler) SetTLSInsecureSkipVerify(b bool) {
+	m.config.TLSConfig.InsecureSkipVerify = b
 }
 
 func (m *Mumbler) Play() error {
