@@ -3,6 +3,7 @@ package mumbler
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -169,7 +170,9 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 		return
 	}
 	m.stream.Volume = m.volume * 0.15
+	fmt.Printf("AudioStreamEvent loop!")
 	for _ = range e.C {
 	}
+	fmt.Printf("Done!")
 	m.stream.Volume = m.volume
 }
