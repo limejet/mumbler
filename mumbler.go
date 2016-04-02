@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/layeh/gumble/gumble"
 	"github.com/layeh/gumble/gumbleffmpeg"
@@ -13,11 +14,14 @@ import (
 )
 
 type Mumbler struct {
-	playlist []Source
-	config   *gumble.Config
-	client   *gumble.Client
-	command  string
-	loop     bool
+	playlist     []Source
+	config       *gumble.Config
+	client       *gumble.Client
+	stream       *gumbleffmpeg.Stream
+	command      string
+	loop         bool
+	audioDucking bool
+	volume       float32
 }
 
 func New() *Mumbler {
@@ -104,15 +108,15 @@ func (m *Mumbler) Play() error {
 	for {
 		for _, playlistItem := range m.playlist {
 			source := playlistItem.GetSource()
-			stream := gumbleffmpeg.New(m.client, source)
+			m.stream = gumbleffmpeg.New(m.client, source)
 
 			if m.command != "" {
-				stream.Command = m.command
+				m.stream.Command = m.command
 			}
-			if err := stream.Play(); err != nil {
+			if err := m.stream.Play(); err != nil {
 				return err
 			}
-			stream.Wait()
+			m.stream.Wait()
 		}
 		if !m.loop {
 			break
@@ -123,6 +127,10 @@ func (m *Mumbler) Play() error {
 
 func (m *Mumbler) Repeat(l bool) {
 	m.loop = l
+}
+
+func (m *Mumbler) AudioDucking(i bool) {
+	m.audioDucking = i
 }
 
 func (m *Mumbler) Server(address string) {
@@ -138,7 +146,9 @@ func (m *Mumbler) Server(address string) {
 func (m *Mumbler) Connect() error {
 
 	m.client = gumble.NewClient(m.config)
-
+	if m.audioDucking {
+		m.client.AttachAudio(m)
+	}
 	if err := m.client.Connect(); err != nil {
 		return err
 	}
@@ -152,4 +162,16 @@ func (m *Mumbler) Connect() error {
 
 func (m *Mumbler) Disconnect() error {
 	return m.client.Disconnect()
+}
+
+func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
+	if m.stream.State() != gumbleffmpeg.StatePlaying {
+		return
+	}
+	m.volume = m.stream.Volume
+	m.stream.Volume = m.volume * 0.2
+	for _ = range e.C {
+		time.Sleep(gumble.AudioDefaultInterval)
+	}
+	m.stream.Volume = m.volume
 }

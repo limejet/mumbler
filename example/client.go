@@ -24,15 +24,21 @@ func main() {
 	m.Name(*NAME)
 	m.Server(*SERVER)
 	m.Repeat(*LOOP)
+	m.AudioDucking(true)
 
 	if *AVCONV {
 		m.Command("avconv")
 	}
 
 	if *CERT != "" {
+		// no key file support for the example.
 		m.Certificate(*CERT, "")
+		m.SetTLSInsecureSkipVerify(*SKIP_VERIFY)
+	} else {
+		// we don't care that the certificate we didn't supply is invalid
+		m.SetTLSInsecureSkipVerify(true)
 	}
-	m.SetTLSInsecureSkipVerify(*SKIP_VERIFY)
+
 	m.AddFile(os.Args[1:]...)
 
 	if err := m.Connect(); err != nil {
