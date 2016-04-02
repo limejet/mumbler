@@ -173,7 +173,7 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 	fmt.Println("AudioStreamEvent loop!")
 	i := 0
 	for _ = range e.C {
-		fmt.Printf("\b\b\b\b    \b\b\b\b%d", i)
+		fmt.Printf("%d\n", i)
 	}
 	fmt.Println("Done!")
 	m.stream.Volume = m.volume
