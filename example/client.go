@@ -15,6 +15,7 @@ var (
 	CREATE      = flag.Bool("create", false, "Allow create channel")
 	AVCONV      = flag.Bool("avconv", false, "Use avconv instead of ffmpeg")
 	SKIP_VERIFY = flag.Bool("skip-verify", false, "Skip TLS certificate verification")
+	LOOP        = flag.Bool("loop", false, "Loop playlist")
 )
 
 func main() {
@@ -22,6 +23,7 @@ func main() {
 	m := mumbler.New()
 	m.Name(*NAME)
 	m.Server(*SERVER)
+	m.Repeat(*LOOP)
 
 	if *AVCONV {
 		m.Command("avconv")
