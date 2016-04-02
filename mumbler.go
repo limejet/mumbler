@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"strconv"
-	"time"
 
 	"github.com/layeh/gumble/gumble"
 	"github.com/layeh/gumble/gumbleffmpeg"
@@ -169,9 +168,8 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 		return
 	}
 	m.volume = m.stream.Volume
-	m.stream.Volume = m.volume * 0.2
+	m.stream.Volume = m.volume * 0.1
 	for _ = range e.C {
-		time.Sleep(gumble.AudioDefaultInterval)
 	}
 	m.stream.Volume = m.volume
 }
