@@ -108,6 +108,7 @@ func (m *Mumbler) Play() error {
 		for _, playlistItem := range m.playlist {
 			source := playlistItem.GetSource()
 			m.stream = gumbleffmpeg.New(m.client, source)
+			m.volume = m.stream.Volume
 
 			if m.command != "" {
 				m.stream.Command = m.command
@@ -167,8 +168,7 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 	if m.stream.State() != gumbleffmpeg.StatePlaying {
 		return
 	}
-	m.volume = m.stream.Volume
-	m.stream.Volume = m.volume * 0.1
+	m.stream.Volume = m.volume * 0.15
 	for _ = range e.C {
 	}
 	m.stream.Volume = m.volume
