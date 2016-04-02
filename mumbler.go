@@ -17,13 +17,12 @@ type Mumbler struct {
 	config   *gumble.Config
 	client   *gumble.Client
 	command  string
+	loop bool
 }
 
 func New() *Mumbler {
 	config := gumble.NewConfig()
-	return &Mumbler{
-		config: config,
-	}
+	return &Mumbler{config: config}
 }
 
 func (m *Mumbler) Name(n string) {
@@ -102,6 +101,7 @@ func (m *Mumbler) SetTLSInsecureSkipVerify(b bool) {
 }
 
 func (m *Mumbler) Play() error {
+	for {
 	for _, playlistItem := range m.playlist {
 		source := playlistItem.GetSource()
 		stream := gumbleffmpeg.New(m.client, source)
@@ -114,7 +114,15 @@ func (m *Mumbler) Play() error {
 		}
 		stream.Wait()
 	}
+	if !m.loop {
+		break
+	}
+	}
 	return nil
+}
+
+func (m *Mumbler) Repeat(l bool) {
+	m.loop = l
 }
 
 func (m *Mumbler) Server(address string) {
