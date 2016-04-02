@@ -3,6 +3,7 @@ package mumbler
 import (
 	"crypto/tls"
 	"errors"
+	"io"
 	"net"
 	"strconv"
 
@@ -12,7 +13,7 @@ import (
 )
 
 type Mumbler struct {
-	playlist []string
+	playlist []Source
 	config   *gumble.Config
 	client   *gumble.Client
 	command  string
@@ -59,11 +60,25 @@ func (m *Mumbler) MoveToChannel(name string, create bool) error {
 }
 
 func (m *Mumbler) AddFile(file ...string) {
-	m.playlist = append(m.playlist, file...)
+	for _, v := range file {
+		m.playlist = append(m.playlist, NewFileSource(v))
+	}
 }
 
-func (m *Mumbler) ClearFiles() {
-	m.playlist = []string{}
+func (m *Mumbler) AddReader(reader ...io.Reader) {
+	for _, v := range reader {
+		m.playlist = append(m.playlist, NewReaderSource(v))
+	}
+}
+
+func (m *Mumbler) AddReadCloser(reader ...io.ReadCloser) {
+	for _, v := range reader {
+		m.playlist = append(m.playlist, NewReadCloserSource(v))
+	}
+}
+
+func (m *Mumbler) ClearPlaylist() {
+	m.playlist = []Source{}
 }
 
 func (m *Mumbler) Command(c string) {
@@ -86,8 +101,8 @@ func (m *Mumbler) Certificate(file, keyfile string) error {
 }
 
 func (m *Mumbler) Play() error {
-	for _, file := range m.playlist {
-		source := gumbleffmpeg.SourceFile(file)
+	for _, playlistItem := range m.playlist {
+		source := playlistItem.GetSource()
 		stream := gumbleffmpeg.New(m.client, source)
 
 		if m.command != "" {
