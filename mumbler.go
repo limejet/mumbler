@@ -22,6 +22,7 @@ type Mumbler struct {
 	loop         bool
 	audioDucking bool
 	volume       float32
+	duckVolume   float32
 }
 
 func New() *Mumbler {
@@ -130,8 +131,11 @@ func (m *Mumbler) Repeat(l bool) {
 	m.loop = l
 }
 
-func (m *Mumbler) AudioDucking(i bool) {
-	m.audioDucking = i
+func (m *Mumbler) AudioDucking(volume float32) {
+	if volume != 0.0 {
+		m.audioDucking = true
+		m.duckVolume = 1 - volume
+	}
 }
 
 func (m *Mumbler) Server(address string) {
@@ -166,10 +170,27 @@ func (m *Mumbler) Disconnect() error {
 }
 
 func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
-	if m.stream.State() != gumbleffmpeg.StatePlaying {
-		return
-	}
-	m.stream.Volume = m.volume * 0.15
-	time.Sleep(1 * time.Second)
-	m.stream.Volume = m.volume
+	//BEWARE: here be hax
+	go func() {
+		t := time.Tick(500 * time.Millisecond)
+		currVol := m.volume
+		for {
+			select {
+			case <-t:
+			volDn:
+				for ; currVol < m.volume; currVol += 0.1 {
+					time.Sleep(50 * time.Millisecond) // for a nice fade
+					m.stream.Volume = currVol
+					select {
+					case <-e.C:
+						break volDn
+					default:
+					}
+				}
+			case <-e.C:
+				m.stream.Volume = m.duckVolume
+				currVol = m.duckVolume
+			}
+		}
+	}()
 }

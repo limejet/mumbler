@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/LimEJET/mumbler"
+	"../../mumbler"
 )
 
 var (
@@ -23,8 +23,8 @@ func main() {
 	m := mumbler.New()
 	m.Name(*NAME)
 	m.Server(*SERVER)
-	m.Repeat(*LOOP)
-	m.AudioDucking(true)
+	m.Repeat(false)
+	m.AudioDucking(0.80)
 
 	if *AVCONV {
 		m.Command("avconv")
