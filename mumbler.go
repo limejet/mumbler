@@ -118,7 +118,6 @@ func (m *Mumbler) Play() error {
 				return err
 			}
 			m.stream.Wait()
-			m.stream = gumbleffmpeg.Stream{} // to fix buffer errors...?
 		}
 		if !m.loop {
 			break
