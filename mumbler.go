@@ -23,7 +23,7 @@ type Mumbler struct {
 	loop         bool
 	audioDucking bool
 	volume       float32
-	duckVolume   float32
+	duckRatio    float32
 }
 
 func New() *Mumbler {
@@ -141,7 +141,7 @@ func (m *Mumbler) Repeat(l bool) {
 func (m *Mumbler) AudioDucking(volume float32) {
 	if volume != 0.0 {
 		m.audioDucking = true
-		m.duckVolume = 1 - volume
+		m.duckRatio = 1 - volume
 	}
 }
 
@@ -178,25 +178,28 @@ func (m *Mumbler) Disconnect() error {
 
 func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 	//BEWARE: here be hax
-	go func() {
-		t := time.Tick(500 * time.Millisecond)
-		currVol := m.volume
-		for {
-			select {
-			case <-t:
-				for ; currVol < m.volume; currVol += 0.1 {
-					time.Sleep(50 * time.Millisecond) // for a nice fade
-					m.stream.Volume = currVol
-					select {
-					case <-e.C:
-						break
-					default: // empty default -> non-blocking
+	if m.audioDucking {
+		go func() {
+			t := time.Tick(500 * time.Millisecond)
+			currVol := m.volume
+			duckvol := m.volume * m.duckRatio
+			for {
+				select {
+				case <-t:
+					for ; currVol < m.volume; currVol += 0.1 {
+						time.Sleep(50 * time.Millisecond) // for a nice fade
+						m.stream.Volume = currVol
+						select {
+						case <-e.C:
+							break
+						default: // empty default -> non-blocking
+						}
 					}
+				case <-e.C:
+					m.stream.Volume = duckvol
+					currVol = duckvol
 				}
-			case <-e.C:
-				m.stream.Volume = m.duckVolume
-				currVol = m.duckVolume
 			}
-		}
-	}()
+		}()
+	}
 }

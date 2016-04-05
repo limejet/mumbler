@@ -25,7 +25,7 @@ func main() {
 	m.Server(*SERVER)
 	m.Repeat(*LOOP)
 	m.Volume(float32(*VOLUME))
-	m.AudioDucking(0.90)
+	m.AudioDucking(0.90) //percentage of volume
 
 	if *AVCONV {
 		m.Command("avconv")
