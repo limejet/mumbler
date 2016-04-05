@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"../../mumbler"
+	"github.com/LimEJET/mumbler"
 )
 
 var (
