@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 
-	"../../mumbler"
+	"github.com/LimEJET/mumbler"
 )
 
 var (
@@ -16,6 +15,7 @@ var (
 	CERT        = flag.String("cert", "", "TLS certificate file (PEM)")
 	SKIP_VERIFY = flag.Bool("skip-verify", false, "Skip TLS certificate verification")
 	LOOP        = flag.Bool("loop", false, "Loop playlist")
+	VOLUME      = flag.Float64("v", 1.0, "set max volume")
 )
 
 func main() {
@@ -23,8 +23,9 @@ func main() {
 	m := mumbler.New()
 	m.Name(*NAME)
 	m.Server(*SERVER)
-	m.Repeat(false)
-	m.AudioDucking(0.80)
+	m.Repeat(*LOOP)
+	m.Volume(float32(*VOLUME))
+	m.AudioDucking(0.90)
 
 	if *AVCONV {
 		m.Command("avconv")
@@ -39,7 +40,7 @@ func main() {
 		m.SetTLSInsecureSkipVerify(true)
 	}
 
-	m.AddFile(os.Args[1:]...)
+	m.AddFile(flag.Args()...)
 
 	if err := m.Connect(); err != nil {
 		fmt.Println(err)
@@ -47,10 +48,13 @@ func main() {
 	}
 
 	m.MoveToChannel(*CHANNEL, true)
+
 	if err := m.Play(); err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(m.Disconnect())
+	if err := m.Disconnect(); err != nil {
+		fmt.Println(err)
+	}
 }

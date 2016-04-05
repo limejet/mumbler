@@ -3,6 +3,7 @@ package mumbler
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -62,6 +63,10 @@ func (m *Mumbler) MoveToChannel(name string, create bool) error {
 
 }
 
+func (m *Mumbler) Volume(v float32) {
+	m.volume = v
+}
+
 func (m *Mumbler) AddFile(file ...string) {
 	for _, v := range file {
 		m.playlist = append(m.playlist, NewFileSource(v))
@@ -110,14 +115,16 @@ func (m *Mumbler) Play() error {
 		for _, playlistItem := range m.playlist {
 			source := playlistItem.GetSource()
 			m.stream = gumbleffmpeg.New(m.client, source)
-			m.volume = m.stream.Volume
+			m.stream.Volume = m.volume
 
 			if m.command != "" {
 				m.stream.Command = m.command
 			}
 			if err := m.stream.Play(); err != nil {
-				return err
+				fmt.Println(err)
+				continue
 			}
+			fmt.Printf("Now playing: %v\n", source)
 			m.stream.Wait()
 		}
 		if !m.loop {
@@ -177,14 +184,13 @@ func (m *Mumbler) OnAudioStream(e *gumble.AudioStreamEvent) {
 		for {
 			select {
 			case <-t:
-			volDn:
 				for ; currVol < m.volume; currVol += 0.1 {
 					time.Sleep(50 * time.Millisecond) // for a nice fade
 					m.stream.Volume = currVol
 					select {
 					case <-e.C:
-						break volDn
-					default:
+						break
+					default: // empty default -> non-blocking
 					}
 				}
 			case <-e.C:
